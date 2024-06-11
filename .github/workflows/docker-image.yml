@@ -1,11 +1,11 @@
 name: Build and Deploy
-     
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-     
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,18 +17,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - name: Install Deps
         run: npm install
-      - name: install express
-        run: npm install express
-        
-   
-        
-      - name: Upload Artefacts
+
+
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: public 
+          path: artifacts  # Убедитесь, что артефакты находятся в папке artifacts
 
   docker:
     runs-on: ubuntu-latest
@@ -37,13 +36,16 @@ jobs:
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -56,37 +58,42 @@ jobs:
    
     steps:
       - name: Run docker run
-        #run
         run: docker run -d -p 8000:3000 narwik141/app:latest
+
   release:
     name: Release project
     runs-on: ubuntu-latest
     needs: build
+
     steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: artifacts
-    - name: Archieve
-      uses: thedoctor0/zip-release@master
-      with:
-        filename: site.zip
-    - name: Create github release
-      id: create-release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.run_number }}
-        release_name: Release ${{ github.run_number }}
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env: 
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: ./site.zip
-        asset_name: site-v${{ github.run_number }}.zip
-        asset_content_type: application/zip
-       
-         
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: artifacts # Скачиваем артефакты в папку artifacts
+
+      - name: Archive artifacts
+        run: zip -r artifacts.zip artifacts
+
+      - name: Create GitHub Release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: "Release description here"
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./artifacts.zip
+          asset_name: artifacts-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
