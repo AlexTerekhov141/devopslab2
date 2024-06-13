@@ -21,18 +21,16 @@ jobs:
         run: npm install
       - name: install express
         run: npm install express
-        
+      - name: Build
+        run: npm run build
    
         
       - name: Upload Artefacts
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: |
-            public
-            views
-            routes
-            bin
+          path: dist
+            
 
   docker:
     runs-on: ubuntu-latest
