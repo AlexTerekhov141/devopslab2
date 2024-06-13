@@ -28,7 +28,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: public 
+          path: |
+            public
+            views
+            routes
+            bin
 
   docker:
     runs-on: ubuntu-latest
