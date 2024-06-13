@@ -26,7 +26,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: public
+          path: | 
+               public
                 bin
                 routes
                 views
